@@ -19,6 +19,8 @@ parse.stamp: preprocess.stamp parse.py
 
 # 1. preprocess the input html and store intermediate json and html in the output folder declared above.
 preprocess.stamp: preprocess.py
+	mkdir -p $(output_html)
+	mkdir -p $(output_words)
 	$(foreach file,$(all_inputs),\
 	python preprocess.py --input $(input_folder)$(file) --output_words $(output_words)$(file).json --output_html $(output_html)$(file);)
 	@touch preprocess.stamp
@@ -27,7 +29,7 @@ preprocess_clean:
 	rm -f preprocess.stamp
 	rm -f parse.stamp
 	rm -f link.stamp
-	rm -r -f $(output_html)/*
-	rm -r -f $(output_words)/*
+	rm -r -f $(output_html)
+	rm -r -f $(output_words)
 
 
