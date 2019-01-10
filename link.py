@@ -35,7 +35,7 @@ def same(w1, w2):
 
 if __name__ == '__main__':
 
-    for doc in get_all_documents()[0:1]:
+    for doc in get_all_documents():
         if doc.name+'.html' in IGNORED_FILES:
             continue
         word_bag = get_word_bag(doc.name)
@@ -47,7 +47,6 @@ if __name__ == '__main__':
         for sent in sentences[1:]:
             coordinates_record = defaultdict(list)
             tokenized_words = sent.text.split()
-
 
             def add_to_coordinate_record_list():
                 current_word_from_bag = word_bag[word_bag_count]
@@ -68,18 +67,21 @@ if __name__ == '__main__':
                     db_count += 1
                     word_bag_count += 1
                 else:
-                    # print(all_words_from_db[db_count-1], word)
                     print(doc.name)
                     assert False
 
-            sent.top = coordinates_record['top']
-            sent.left = coordinates_record['left']
-            sent.bottom = coordinates_record['bottom']
-            sent.right = coordinates_record['right']
-            sent.page = coordinates_record['page_num']
+            def sanity_check():
+                sent.top = coordinates_record['top']
+                sent.left = coordinates_record['left']
+                sent.bottom = coordinates_record['bottom']
+                sent.right = coordinates_record['right']
+                sent.page = coordinates_record['page_num']
 
-            try:
-                assert len(sent.text.split()) == len(sent.top) == len(sent.left) == len(sent.right) == len(sent.bottom) == len(sent.page)
-            except AssertionError:
-                print(len(sent.text.split()), len(sent.top), len(sent.left), len(sent.bottom), len(sent.right), len(sent.page))
+                try:
+                    assert len(sent.text.split()) == len(sent.top) == len(sent.left) == len(sent.right) == len(sent.bottom) == len(sent.page)
+                except AssertionError:
+                    print(len(sent.text.split()), len(sent.top), len(sent.left), len(sent.bottom), len(sent.right), len(sent.page))
+
+            sanity_check()
+
     session.commit()

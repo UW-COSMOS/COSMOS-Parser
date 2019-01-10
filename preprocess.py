@@ -25,8 +25,8 @@ def coordinate(title, org_x=0, org_y=0):
     page_match = PAGE_NUMBER_PATTERN.search(INPUT_FILE)
     return {
         'xmin': int(match.group(1)) + org_x,
-        'ymin': int(match.group(2)) + org_x,
-        'xmax': int(match.group(3)) + org_y,
+        'ymin': int(match.group(2)) + org_y,
+        'xmax': int(match.group(3)) + org_x,
         'ymax': int(match.group(4)) + org_y,
         'page_num': int(page_match.group(1))
     }
@@ -34,7 +34,7 @@ def coordinate(title, org_x=0, org_y=0):
 
 def get_data_coordinate_pattern(data_coordinate_str):
     match = DATA_COORDINATES_PATTERN.search(data_coordinate_str)
-    return int(match.group(1)), int(match.group(3))
+    return int(match.group(1)), int(match.group(2))
 
 
 def load_file_to_tree(path):
@@ -80,7 +80,6 @@ def remove_ocr_and_split_paragraph(root):
 
 if __name__ == '__main__':
     tree = load_file_to_tree(INPUT_FILE)
-    print(STRIP_TAGS)
     etree.strip_tags(tree, *STRIP_TAGS)
     with open(OUTPUT_WORD, 'w') as out_word:
         json.dump([*get_all_words_with_coordinates(tree)], out_word, indent=4)
