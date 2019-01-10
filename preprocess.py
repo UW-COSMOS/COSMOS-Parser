@@ -4,28 +4,31 @@ import json
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-input', default='data/html/S1470160X05000063.pdf-0000.html')
-parser.add_argument('-output_words', default='out/words/S1470160X05000063.pdf-0000.json')
-parser.add_argument('-output_html', default='out/html/S1470160X05000063.pdf-0000.html')
-parser.add_argument('-strip_tags', type=str, action="append", default='strong em')
+parser.add_argument('--input', default='data/html/files/S1470160X05000063.pdf-0004.html')
+parser.add_argument('--output_words', default='out/words/S1470160X05000063.pdf-0004.html.json')
+parser.add_argument('--output_html', default='out/html/S1470160X05000063.pdf-0004.html')
+parser.add_argument('--strip_tags', nargs='+', default=['strong', 'em'])
 args = parser.parse_args()
 
 INPUT_FILE = args.input
 OUTPUT_WORD = args.output_words
 OUTPUT_HTML = args.output_html
-STRIP_TAGS = args.strip_tags.split()
+STRIP_TAGS = args.strip_tags
 
 BBOX_COORDINATES_PATTERN = re.compile("bbox\s(-?[0-9]+)\s(-?[0-9]+)\s(-?[0-9]+)\s(-?[0-9]+)")
 DATA_COORDINATES_PATTERN = re.compile("(-?[0-9]+)\s(-?[0-9]+)\s(-?[0-9]+)\s(-?[0-9]+).")
+PAGE_NUMBER_PATTERN = re.compile(".-([0-9]+).html")
 
 
 def coordinate(title, org_x=0, org_y=0):
     match = BBOX_COORDINATES_PATTERN.search(title)
+    page_match = PAGE_NUMBER_PATTERN.search(INPUT_FILE)
     return {
         'xmin': int(match.group(1)) + org_x,
         'ymin': int(match.group(2)) + org_x,
         'xmax': int(match.group(3)) + org_y,
         'ymax': int(match.group(4)) + org_y,
+        'page_num': int(page_match.group(1))
     }
 
 
@@ -53,7 +56,7 @@ def get_all_words_with_coordinates(root):
             base_x, base_y = get_data_coordinate_pattern(meta_node.attrib['data-coordinates'])
             for word in child.xpath(".//*[@class='ocrx_word']"):
                 if word.text.strip():
-                    print(word.text)
+                    # print(word.text)
                     yield {
                         'text': word.text,
                         'word_bbox': coordinate(word.attrib['title'], base_x, base_y),
@@ -68,7 +71,7 @@ def remove_ocr_and_split_paragraph(root):
             for child in area.xpath(".//*"):
                 if 'id' not in child.attrib or child.attrib['id'] != 'rawtext':
                     child.getparent().remove(child)
-                else:
+                elif child.text:
                     for paragraph in re.split('\n{2,}', child.text):
                         if len(paragraph) > 0:
                             etree.SubElement(child, "p").text = paragraph
@@ -77,9 +80,11 @@ def remove_ocr_and_split_paragraph(root):
 
 if __name__ == '__main__':
     tree = load_file_to_tree(INPUT_FILE)
+    print(STRIP_TAGS)
     etree.strip_tags(tree, *STRIP_TAGS)
-    json.dump([*get_all_words_with_coordinates(tree)], open(OUTPUT_WORD, 'w'), indent=4)
+    with open(OUTPUT_WORD, 'w') as out_word:
+        json.dump([*get_all_words_with_coordinates(tree)], out_word, indent=4)
     remove_ocr_and_split_paragraph(tree)
-    with open(OUTPUT_HTML, 'wb') as out_f:
-        out_f.write(etree.tostring(tree, pretty_print=True))
+    with open(OUTPUT_HTML, 'wb') as out_html:
+        out_html.write(etree.tostring(tree, pretty_print=True))
 
