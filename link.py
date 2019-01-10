@@ -26,8 +26,10 @@ def get_word_bag(html_source):
 def get_all_documents():
     return session.query(Document).order_by(Document.id)
 
+
 def get_all_sentence_from_a_doc(doc_id):
     return session.query(Sentence).filter(Sentence.document_id == doc_id).order_by(Sentence.id)
+
 
 def same(w1, w2):
     return w1.replace('-', '—') == w2.replace('-', '—')
@@ -70,17 +72,18 @@ if __name__ == '__main__':
                     print(doc.name)
                     assert False
 
-            def sanity_check():
-                sent.top = coordinates_record['top']
-                sent.left = coordinates_record['left']
-                sent.bottom = coordinates_record['bottom']
-                sent.right = coordinates_record['right']
-                sent.page = coordinates_record['page_num']
+            sent.top = coordinates_record['top']
+            sent.left = coordinates_record['left']
+            sent.bottom = coordinates_record['bottom']
+            sent.right = coordinates_record['right']
+            sent.page = coordinates_record['page_num']
 
+            def sanity_check():
                 try:
                     assert len(sent.text.split()) == len(sent.top) == len(sent.left) == len(sent.right) == len(sent.bottom) == len(sent.page)
                 except AssertionError:
                     print(len(sent.text.split()), len(sent.top), len(sent.left), len(sent.bottom), len(sent.right), len(sent.page))
+                    assert False
 
             sanity_check()
 
