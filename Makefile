@@ -4,7 +4,7 @@ output_words = out/words/
 all_inputs = $(shell ls $(input_folder))
 db_connect_str = postgres://postgres:password@localhost:5432/cosmos
 
-.SECONDARY: preprocess.stamp parse.stamp parse.stamp
+.SECONDARY: preprocess.stamp parse.stamp link.stamp
 
 # 3. run the link file to insert coordinate information into fonduer based on the information from the json output folder (aka. hocr)
 link.stamp: parse.stamp link.py
