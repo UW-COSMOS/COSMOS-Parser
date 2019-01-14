@@ -45,37 +45,43 @@ def load_file_to_tree(path):
 
 def get_ocr_segments(root):
     for node in root.xpath("//body"):
-        yield node
+        for child in node:
+            yield child
 
 
 def get_all_words_with_coordinates(root):
-    for body in get_ocr_segments(root):
-        for child in body:
-            meta_node = child.xpath(".//*[@id='hocr']")[0]
-            assert len(child.xpath(".//*[@id='hocr']")) == 1
-            base_x, base_y = get_data_coordinate_pattern(meta_node.attrib['data-coordinates'])
-            for word in child.xpath(".//*[@class='ocrx_word']"):
-                if word.text.strip():
-                    # print(word.text)
-                    yield {
-                        'text': word.text,
-                        'word_bbox': coordinate(word.attrib['title'], base_x, base_y),
-                        'line_bbox': coordinate(word.getparent().attrib['title'], base_x, base_y),
-                        'area_bbox': coordinate(word.getparent().getparent().attrib['title'], base_x, base_y),
-                    }
+    for child in get_ocr_segments(root):
+        meta_node = child.xpath(".//*[@id='hocr']")[0]
+        assert len(child.xpath(".//*[@id='hocr']")) == 1
+        base_x, base_y = get_data_coordinate_pattern(meta_node.attrib['data-coordinates'])
+        for word in child.xpath(".//*[@class='ocrx_word']"):
+            if word.text.strip():
+                # print(word.text)
+                yield {
+                    'text': word.text,
+                    'word_bbox': coordinate(word.attrib['title'], base_x, base_y),
+                    'line_bbox': coordinate(word.getparent().attrib['title'], base_x, base_y),
+                    'area_bbox': coordinate(word.getparent().getparent().attrib['title'], base_x, base_y),
+                }
 
 
 def remove_ocr_and_split_paragraph(root):
-    for node in get_ocr_segments(root):
-        for area in node:
-            for child in area.xpath(".//*"):
-                if 'id' not in child.attrib or child.attrib['id'] != 'rawtext':
+    for area in get_ocr_segments(root):
+        is_figure = area.attrib['class'] == 'Figure'
+        for child in area:
+            if 'id' not in child.attrib or child.attrib['id'] != 'rawtext':
+                if is_figure:
+                    if child.tag != 'img':
+                        child.getparent().remove(child)
+                else:
                     child.getparent().remove(child)
-                elif child.text:
-                    for paragraph in re.split('\n{2,}', child.text):
-                        if len(paragraph) > 0:
-                            etree.SubElement(child, "p").text = paragraph
-                        child.text = ''
+            elif child.text:
+                for paragraph in re.split('\n{2,}', child.text):
+                    if len(paragraph) > 0:
+                        etree.SubElement(child, "p").text = paragraph
+                    child.text = ''
+        # print(area.attrib)
+
 
 
 if __name__ == '__main__':
