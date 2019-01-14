@@ -67,13 +67,10 @@ def get_all_words_with_coordinates(root):
 
 def remove_ocr_and_split_paragraph(root):
     for area in get_ocr_segments(root):
-        is_figure = area.attrib['class'] == 'Figure'
+        is_figure = area.attrib['class'] == 'Figure' if 'class' in area.attrib else False
         for child in area:
             if 'id' not in child.attrib or child.attrib['id'] != 'rawtext':
-                if is_figure:
-                    if child.tag != 'img':
-                        child.getparent().remove(child)
-                else:
+                if (is_figure and child.tag != 'img') or not is_figure:
                     child.getparent().remove(child)
             elif child.text:
                 for paragraph in re.split('\n{2,}', child.text):
