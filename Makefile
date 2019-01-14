@@ -1,6 +1,6 @@
-input_folder = data/html/files/
-output_html = out/html/
-output_words = out/words/
+input_folder = data/html/files/ #contains only the html source files
+output_html = out/html/ #intermediate folder location (will be auto-generated)
+output_words = out/words/ #intermediate folder location (will be auto-generated)
 all_inputs = $(shell ls $(input_folder))
 db_connect_str = postgres://postgres:password@localhost:5432/cosmos
 
