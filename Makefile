@@ -1,14 +1,18 @@
-input_folder = data/html/files/ #contains only the html source files
-output_html = out/html/ #intermediate folder location (will be auto-generated)
-output_words = out/words/ #intermediate folder location (will be auto-generated)
-all_inputs = $(shell ls $(input_folder))
-db_connect_str = postgres://postgres:password@localhost:5432/cosmos
+#contains only the html source files
+input_folder = data/html/files/
+merge_folder = data/html/merged/
+#intermediate folder location (will be auto-generated)
+output_html = out/html/
+#intermediate folder location (will be auto-generated)
+output_words = out/words/
+all_inputs = $(shell ls $(merge_folder))
+db_connect_str = postgres://postgres:xxxxx@localhost:5432/cosmos4
 
 .SECONDARY: preprocess.stamp parse.stamp link.stamp
 
 # 3. run the link file to insert coordinate information into fonduer based on the information from the json output folder (aka. hocr)
 link.stamp: parse.stamp link.py
-	python link.py --words_location $(output_words) --database $(db_connect_str) --ignored_files S1470160X05000063.pdf-0004.html
+	python link.py --words_location $(output_words) --database $(db_connect_str)
 	@touch link.stamp
 
 # 2. run the fonduer parser on the generated html file. This will fill in the postgres dabase with everything
@@ -18,18 +22,28 @@ parse.stamp: preprocess.stamp parse.py
 	@touch parse.stamp
 
 # 1. preprocess the input html and store intermediate json and html in the output folder declared above.
-preprocess.stamp: preprocess.py
+preprocess.stamp: preprocess.py merge.stamp
+	rm -r -f $(output_html)
+	rm -r -f $(output_words)
 	mkdir -p $(output_html)
 	mkdir -p $(output_words)
-	$(foreach file,$(all_inputs),\
-	python preprocess.py --input $(input_folder)$(file) --output_words $(output_words)$(file).json --output_html $(output_html)$(file);)
+	@$(foreach file,$(all_inputs),\
+	python preprocess.py --input $(merge_folder)$(file) --output_words $(output_words)$(file).json --output_html $(output_html)$(file);)
 	@touch preprocess.stamp
 
-preprocess_clean:
+merge.stamp: pagemerger.py
+	rm -r -f $(merge_folder)
+	mkdir -p $(merge_folder)
+	python pagemerger.py --rawfolder $(input_folder) --outputfolder $(merge_folder)
+	@touch merge.stamp
+
+clean:
+	rm -f merge.stamp
 	rm -f preprocess.stamp
 	rm -f parse.stamp
 	rm -f link.stamp
 	rm -r -f $(output_html)
 	rm -r -f $(output_words)
+	rm -r -f $(merge_folder)
 
 
