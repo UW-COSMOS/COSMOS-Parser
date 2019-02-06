@@ -30,7 +30,7 @@ def load_file_to_tree(path):
         try:
             loaded = etree.fromstring(doc_str)
         except etree.XMLSyntaxError:
-            loguru.logger.debug("Invalid XML. Change to HTML parser "+path)
+            loguru.logger.debug("Invalid XML Change to HTML parser "+path)
             loaded = html.fromstring(doc_str)
             loaded = etree.fromstring(etree.tostring(loaded))
     return loaded

@@ -6,22 +6,23 @@ output_html = out/html/
 #intermediate folder location (will be auto-generated)
 output_words = out/words/
 all_inputs = $(shell ls $(merge_folder))
-db_connect_str = postgres://postgres:xxxxx@localhost:5432/cosmos4
+db_connect_str = postgres://postgres:password@localhost:5432/cosmos5
 
 .SECONDARY: preprocess.stamp parse.stamp link.stamp
+.PHONY: install-linux install-mac
 
-# 3. run the link file to insert coordinate information into fonduer based on the information from the json output folder (aka. hocr)
+# 4. run the link file to insert coordinate information into fonduer based on the information from the json output folder (aka. hocr)
 link.stamp: parse.stamp link.py
 	python link.py --words_location $(output_words) --database $(db_connect_str)
 	@touch link.stamp
 
-# 2. run the fonduer parser on the generated html file. This will fill in the postgres dabase with everything
+# 3. run the fonduer parser on the generated html file. This will fill in the postgres dabase with everything
 # fonduer can understand except the coordinate information.
 parse.stamp: preprocess.stamp parse.py
 	python parse.py --html_location $(output_html) --database $(db_connect_str)
 	@touch parse.stamp
 
-# 1. preprocess the input html and store intermediate json and html in the output folder declared above.
+# 2. preprocess the input html and store intermediate json and html in the output folder declared above.
 preprocess.stamp: preprocess.py merge.stamp
 	rm -r -f $(output_html)
 	rm -r -f $(output_words)
@@ -31,11 +32,25 @@ preprocess.stamp: preprocess.py merge.stamp
 	python preprocess.py --input $(merge_folder)$(file) --output_words $(output_words)$(file).json --output_html $(output_html)$(file);)
 	@touch preprocess.stamp
 
+# 1. group files by files name
 merge.stamp: pagemerger.py
 	rm -r -f $(merge_folder)
 	mkdir -p $(merge_folder)
 	python pagemerger.py --rawfolder $(input_folder) --outputfolder $(merge_folder)
 	@touch merge.stamp
+
+
+install-linux:
+	sudo apt update
+	sudo apt install libxml2-dev libxslt-dev python3-dev
+	sudo apt build-dep python-matplotlib
+	sudo apt install poppler-utils
+	sudo apt install postgresql
+
+install-mac:
+	brew install poppler
+	brew install postgresql
+	brew install libpng freetype pkg-config
 
 clean:
 	rm -f merge.stamp

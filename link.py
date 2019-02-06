@@ -70,7 +70,7 @@ if __name__ == '__main__':
                 else:
                     str_buffer += word
                     if same(str_buffer, word_bag[word_bag_count]['text']):
-                        loguru.logger.debug("%s : %s" % (str_buffer, word_bag[word_bag_count]['text']))
+                        # loguru.logger.debug("%s : %s" % (str_buffer, word_bag[word_bag_count]['text']))
                         str_buffer = ''
                         word_bag_count += 1
 
