@@ -1,10 +1,11 @@
-#contains only the html source files
+#contains only the html source files and nothing else
 input_folder = data/html/files/
-merge_folder = data/html/merged/
+
 #intermediate folder location (will be auto-generated)
 output_html = out/html/
-#intermediate folder location (will be auto-generated)
+merge_folder = data/html/merged/
 output_words = out/words/
+
 all_inputs = $(shell ls $(merge_folder))
 db_connect_str = postgres://postgres:password@localhost:5432/cosmos5
 
@@ -32,7 +33,7 @@ preprocess.stamp: preprocess.py merge.stamp
 	python preprocess.py --input $(merge_folder)$(file) --output_words $(output_words)$(file).json --output_html $(output_html)$(file);)
 	@touch preprocess.stamp
 
-# 1. group files by files name
+# 1. group files by file name
 merge.stamp: pagemerger.py
 	rm -r -f $(merge_folder)
 	mkdir -p $(merge_folder)
@@ -46,11 +47,13 @@ install-linux:
 	sudo apt build-dep python-matplotlib
 	sudo apt install poppler-utils
 	sudo apt install postgresql
+	pip install -r requirements.txt
 
 install-mac:
 	brew install poppler
 	brew install postgresql
 	brew install libpng freetype pkg-config
+	pip install -r requirements.txt
 
 clean:
 	rm -f merge.stamp
